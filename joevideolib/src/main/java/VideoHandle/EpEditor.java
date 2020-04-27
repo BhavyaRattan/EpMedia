@@ -159,8 +159,24 @@ public class EpEditor {
 			mediaExtractor.release();
 		}
 		//设置默认宽高
-		outputOption.width = outputOption.width == 0 ? DEFAULT_WIDTH : outputOption.width;
-		outputOption.height = outputOption.height == 0 ? DEFAULT_HEIGHT : outputOption.height;
+		int width = outputOption.width == 0 ? DEFAULT_WIDTH : outputOption.width;
+		int height = outputOption.height == 0 ? DEFAULT_HEIGHT : outputOption.height;
+
+		StringBuilder  scale = new StringBuilder("scale=iw*min(")
+				.append(width).append("/iw\\,")
+				.append(height).append("/ih):ih*min(")
+				.append(width)
+				.append("/iw\\,")
+				.append(height).append("/ih), pad=")
+				.append(width).append(":")
+				.append(height).append(":(")
+				.append(width).append("-iw*min(")
+				.append(width).append("/iw\\,")
+				.append(height).append("/ih))/").append(2).append(":(")
+				.append(height).append("-ih*min(")
+				.append(width).append("/iw\\,")
+				.append(height).append("/ih))/").append(2);
+
 		//判断数量
 		if (epVideos.size() > 1) {
 			CmdList cmd = new CmdList();
@@ -187,8 +203,8 @@ public class EpEditor {
 			StringBuilder filter_complex = new StringBuilder();
 			for (int i = 0; i < epVideos.size(); i++) {
 				StringBuilder filter = epVideos.get(i).getFilters() == null ? new StringBuilder("") : epVideos.get(i).getFilters().append(",");
-				filter_complex.append("[").append(i).append(":v]").append(filter).append("scale=").append(outputOption.width).append(":").append(outputOption.height)
-						.append(",setdar=").append(outputOption.getSar()).append("[outv").append(i).append("];");
+				filter_complex.append("[").append(i).append(":v]").append(filter).append(scale)
+						.append(",setsar=1:1").append("[outv").append(i).append("];");
 			}
 			//添加标记和处理宽高
 			int drawNum = epVideos.size();//图标计数器
