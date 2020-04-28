@@ -249,6 +249,7 @@ public class EpEditor {
 				cmd.append("-map").append("[outa]");
 			}
 			cmd.append(outputOption.getOutputInfo().split(" "));
+			cmd.append("-vcodec").append("libx264").append("-crf 24");
 			cmd.append("-preset").append("superfast").append(outputOption.outPath);
 			long duration = 0;
 			for (EpVideo ep : epVideos) {
