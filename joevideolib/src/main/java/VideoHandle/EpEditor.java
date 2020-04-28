@@ -204,7 +204,7 @@ public class EpEditor {
 			for (int i = 0; i < epVideos.size(); i++) {
 				StringBuilder filter = epVideos.get(i).getFilters() == null ? new StringBuilder("") : epVideos.get(i).getFilters().append(",");
 				filter_complex.append("[").append(i).append(":v]").append(filter).append(scale)
-						.append(",setsar=1:1").append("[outv").append(i).append("];");
+						.append(",setdar=").append(outputOption.getSar()).append("[outv").append(i).append("];");
 			}
 			//添加标记和处理宽高
 			int drawNum = epVideos.size();//图标计数器
