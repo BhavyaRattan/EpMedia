@@ -24,10 +24,12 @@ public class EpVideo {
 
 	//裁剪
 	private Crop mCrop;
+	private String orientation = "0";
 
 
-	public EpVideo(String videoPath) {
+	public EpVideo(String videoPath, String orientation) {
 		this.videoPath = videoPath;
+		this.orientation = orientation;
 		epPics = new ArrayList<>();
 	}
 
@@ -38,6 +40,10 @@ public class EpVideo {
 			filter.append(",");
 		}
 		return filter;
+	}
+
+	public String getOrientation() {
+		return orientation;
 	}
 
 	/**
