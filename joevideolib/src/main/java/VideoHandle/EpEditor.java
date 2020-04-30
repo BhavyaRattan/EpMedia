@@ -200,6 +200,7 @@ public class EpEditor {
         //检测是否有无音轨视频
         boolean isNoAudioTrack = false;
         for (EpVideo epVideo : epVideos) {
+
             MediaExtractor mediaExtractor = new MediaExtractor();
             try {
                 mediaExtractor.setDataSource(epVideo.getVideoPath());
