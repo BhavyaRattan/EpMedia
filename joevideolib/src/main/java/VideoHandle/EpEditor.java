@@ -133,6 +133,63 @@ public class EpEditor {
         execCmd(cmd, duration, onEditorListener);
     }
 
+
+    public static void scaleVideo(EpVideo epVideo, OutputOption outputOption, OnEditorListener onEditorListener) {
+        boolean isFilter = false;
+        ArrayList<EpDraw> epDraws = epVideo.getEpDraws();
+        //开始处理
+        CmdList cmd = new CmdList();
+        cmd.append("ffmpeg");
+        cmd.append("-y");
+        if (epVideo.getVideoClip()) {
+            cmd.append("-ss").append(epVideo.getClipStart()).append("-t").append(epVideo.getClipDuration()).append("-accurate_seek");
+        }
+        cmd.append("-i").append(epVideo.getVideoPath());
+        //添加图片或者动图
+        StringBuilder filter_complex = new StringBuilder();
+        if (epVideo.getFilters() != null) {
+            cmd.append("-filter_complex");
+            filter_complex.append(epVideo.getFilters());
+            isFilter = true;
+        }
+        //设置输出分辨率
+
+        if (epVideo.getFilters() != null) {
+            filter_complex.append(getScale(epVideo, outputOption))
+                    .append(",setdar=").append(outputOption.getSar());
+        } else {
+            cmd.append("-filter_complex");
+            filter_complex.append(getScale(epVideo, outputOption))
+                    .append(",setdar=").append(outputOption.getSar());
+            isFilter = true;
+        }
+
+        if (!filter_complex.toString().equals("")) {
+            cmd.append(filter_complex.toString());
+        }
+
+
+        //输出选项
+        cmd.append(outputOption.getOutputInfo().split(" "));
+        if (!isFilter && outputOption.getOutputInfo().isEmpty()) {
+            cmd.append("-vcodec");
+            cmd.append("copy");
+            cmd.append("-acodec");
+            cmd.append("copy");
+        } else {
+            cmd.append("-preset");
+            cmd.append("superfast");
+        }
+        cmd.append(outputOption.outPath);
+        long duration = VideoUitls.getDuration(epVideo.getVideoPath());
+        if (epVideo.getVideoClip()) {
+            long clipTime = (long) ((epVideo.getClipDuration() - epVideo.getClipStart()) * 1000000);
+            duration = clipTime < duration ? clipTime : duration;
+        }
+        //执行命令
+        execCmd(cmd, duration, onEditorListener);
+    }
+
     /**
      * 合并多个视频
      *
@@ -159,23 +216,7 @@ public class EpEditor {
             mediaExtractor.release();
         }
         //设置默认宽高
-        int width = outputOption.width == 0 ? DEFAULT_WIDTH : outputOption.width;
-        int height = outputOption.height == 0 ? DEFAULT_HEIGHT : outputOption.height;
 
-//		StringBuilder  scale = new StringBuilder("scale=iw*min(")
-//				.append(width).append("/iw\\,")
-//				.append(height).append("/ih):ih*min(")
-//				.append(width)
-//				.append("/iw\\,")
-//				.append(height).append("/ih), pad=")
-//				.append(width).append(":")
-//				.append(height).append(":(")
-//				.append(width).append("-iw*min(")
-//				.append(width).append("/iw\\,")
-//				.append(height).append("/ih))/").append(2).append(":(")
-//				.append(height).append("-ih*min(")
-//				.append(width).append("/iw\\,")
-//				.append(height).append("/ih))/").append(2);
 
         //判断数量
         if (epVideos.size() > 1) {
@@ -189,68 +230,19 @@ public class EpEditor {
                 }
                 cmd.append("-i").append(e.getVideoPath());
             }
-//			for (EpVideo e : epVideos) {
-//				ArrayList<EpDraw> epDraws = e.getEpDraws();
-//				if (epDraws.size() > 0) {
-//					for (EpDraw ep : epDraws) {
-//						if (ep.isAnimation()) cmd.append("-ignore_loop").append(0);
-//						cmd.append("-i").append(ep.getPicPath());
-//					}
-//				}
-//			}
+
             //添加滤镜标识
             cmd.append("-filter_complex");
             StringBuilder filter_complex = new StringBuilder();
             for (int i = 0; i < epVideos.size(); i++) {
 
-                //.append(",setsar=").append("1:1")
 
                 StringBuilder filter = epVideos.get(i).getFilters() == null ? new StringBuilder("") : epVideos.get(i).getFilters().append(",");
 
-                String scale = "scale=" + outputOption.width + ":" + outputOption.height;
-
-                if (epVideos.get(i).getOrientation().equals("0")) {
-                    scale = "scale=iw*min(" +
-                            width + "/iw\\," +
-                            height + "/ih):ih*min(" +
-                            width +
-                            "/iw\\," +
-                            height + "/ih), pad=" +
-                            width + ":" +
-                            height + ":(" +
-                            width + "-iw*min(" +
-                            width + "/iw\\," +
-                            height + "/ih))/" + 2 + ":(" +
-                            height + "-ih*min(" +
-                            width + "/iw\\," +
-                            height + "/ih))/" + 2;
-                }
-
-                filter_complex.append("[").append(i).append(":v]").append(filter).append(scale)
-				.append(",setdar=").append(outputOption.getSar()).append("[outv").append(i).append("];");
+                filter_complex.append("[").append(i).append(":v]").append(filter).append(getScale(epVideos.get(i), outputOption))
+                        .append(",setdar=").append(outputOption.getSar()).append("[outv").append(i).append("];");
             }
-            //添加标记和处理宽高
-//			int drawNum = epVideos.size();//图标计数器
-//			for (int i = 0; i < epVideos.size(); i++) {
-//				for (int j = 0; j < epVideos.get(i).getEpDraws().size(); j++) {
-//					filter_complex.append("[").append(drawNum++).append(":0]").append(epVideos.get(i).getEpDraws().get(j).getPicFilter()).append("scale=")
-//							.append(epVideos.get(i).getEpDraws().get(j).getPicWidth()).append(":").append(epVideos.get(i).getEpDraws().get(j)
-//							.getPicHeight()).append("[p").append(i).append("a").append(j).append("];");
-//				}
-//			}
-            //添加图标操作
-//			for (int i = 0; i < epVideos.size(); i++) {
-//				for (int j = 0; j < epVideos.get(i).getEpDraws().size(); j++) {
-//					filter_complex.append("[outv").append(i).append("][p").append(i).append("a").append(j).append("]overlay=")
-//							.append(epVideos.get(i).getEpDraws().get(j).getPicX()).append(":")
-//							.append(epVideos.get(i).getEpDraws().get(j).getPicY())
-//							.append(epVideos.get(i).getEpDraws().get(j).getTime());
-//					if (epVideos.get(i).getEpDraws().get(j).isAnimation()) {
-//						filter_complex.append(":shortest=1");
-//					}
-//					filter_complex.append("[outv").append(i).append("];");
-//				}
-//			}
+
             //开始合成视频
             for (int i = 0; i < epVideos.size(); i++) {
                 filter_complex.append("[outv").append(i).append("]");
@@ -689,5 +681,32 @@ public class EpEditor {
                 onEditorListener.onProgress(progress);
             }
         });
+    }
+
+    private static String getScale(EpVideo epVideo, OutputOption outputOption) {
+
+        int width = outputOption.width == 0 ? DEFAULT_WIDTH : outputOption.width;
+        int height = outputOption.height == 0 ? DEFAULT_HEIGHT : outputOption.height;
+
+        String scale = "scale=" + width + ":" + height;
+
+        if (epVideo.getOrientation().toLowerCase().equals("landscape")) {
+            scale = "scale=iw*min(" +
+                    width + "/iw\\," +
+                    height + "/ih):ih*min(" +
+                    width +
+                    "/iw\\," +
+                    height + "/ih), pad=" +
+                    width + ":" +
+                    height + ":(" +
+                    width + "-iw*min(" +
+                    width + "/iw\\," +
+                    height + "/ih))/" + 2 + ":(" +
+                    height + "-ih*min(" +
+                    width + "/iw\\," +
+                    height + "/ih))/" + 2;
+        }
+
+        return scale;
     }
 }

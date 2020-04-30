@@ -24,12 +24,17 @@ public class EpVideo {
 
 	//裁剪
 	private Crop mCrop;
-	private String orientation = "0";
+	private String orientation = "portrait";
 
 
 	public EpVideo(String videoPath, String orientation) {
 		this.videoPath = videoPath;
 		this.orientation = orientation;
+		epPics = new ArrayList<>();
+	}
+
+	public EpVideo(String videoPath) {
+		this.videoPath = videoPath;
 		epPics = new ArrayList<>();
 	}
 
