@@ -27,6 +27,7 @@ public class EpVideo {
 	private String orientation = "portrait";
 
 
+
 	public EpVideo(String videoPath, String orientation) {
 		this.videoPath = videoPath;
 		this.orientation = orientation;
