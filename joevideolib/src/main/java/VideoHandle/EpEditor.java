@@ -685,10 +685,20 @@ public class EpEditor {
 
         int width = outputOption.width == 0 ? DEFAULT_WIDTH : outputOption.width;
         int height = outputOption.height == 0 ? DEFAULT_HEIGHT : outputOption.height;
+        float aspectRatio = 9 / 16f;
 
-        //String scale = "scale=" + width + ":" + height;
-        String scale =  "crop= 'if(gte(a*sar,0.5625),0.5625*ih*sar,iw)':'if(gte(a*sar,0.5625),ih,1.777*iw*sar)', scale=" + width + "x" + height
-                + ", setsar=1";
+        String scale = "crop= 'if(gte(a*sar," +
+                aspectRatio +
+                ")," +
+                aspectRatio +
+                "*ih*sar,iw)':'if(gte(a*sar," +
+                aspectRatio +
+                "),ih," +
+                1 / aspectRatio +
+                "*iw*sar)', scale=" +
+                width + "x" +
+                height +
+                ", setsar=1";
 
         if (epVideo.getOrientation().toLowerCase().equals("landscape")) {
             scale = "scale=iw*min(" +
